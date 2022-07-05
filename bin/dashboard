@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+TOKENNAME=$(kubectl -n kube-system get serviceaccount/dashboard-admin -o jsonpath='{.secrets[0].name}')
+export TOKENNAME
+TOKEN=$(kubectl -n kube-system get secret "$TOKENNAME" -o jsonpath='{.data.token}' | base64 --decode)
+export TOKEN
+IP=$(minikube ip --profile=k8s-mlops)
+export IP
+
+echo $TOKEN
+
+open https://kubernetes-dashboard.minikube.local/
