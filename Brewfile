@@ -2,6 +2,10 @@
 # https://github.com/npryce/adr-tools
 brew "adr-tools"
 
+# Toolkit for embedding hypervisor capabilities in your application
+# https://github.com/moby/hyperkit
+brew "hyperkit"
+
 # # Kubernetes command-line interface
 # # https://kubernetes.io/
 # brew "kubernetes-cli"

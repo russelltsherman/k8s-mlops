@@ -8,8 +8,19 @@
 
 # https://deliciousbrains.com/ssl-certificate-authority-for-local-https-development/
 
+# On MacOS the default OpenSSL config does not include the configuration for 
+# v3_ca certificate generation. 
+
+# edit /etc/ssl/openssl.cnf file and add the following extension information
+# [ v3_ca ]
+# basicConstraints        = critical,CA:TRUE
+# subjectKeyIdentifier    = hash
+# authorityKeyIdentifier  = keyid:always,issuer:always
+
+# And then adding -extensions v3_ca to the open ssl cert generation will result generating a correct CA certificate.
+
 PROJECT_ROOT=$(git rev-parse --show-toplevel)
-SUBJECT="/C=US/ST=Texas/L=Austin/O=OpsBots LLC/OU=DevOps Department/CN=opsbots.org"
+SUBJECT="/C=US/ST=Texas/L=Austin/O=OpsBots LLC/OU=DevOps Department/CN=opsbots.org/emailAddress=support@opsbots.org"
 
 mkdir "$PROJECT_ROOT"/.certs
 
@@ -24,13 +35,19 @@ then
     # Generate the X509 certificate for the CA: 
     openssl req \
         -x509 \
-        -days 365000 \
+        -days 3650 \
+        -extensions v3_ca \
         -key ca-key.pem \
         -new \
         -nodes \
+        -sha256 \
         -subj "$SUBJECT" \
         -out ca-cert.pem
 fi
+
+# create kubernetes secret for opsbots ca
+kubectl create secret tls opsbots-tls-ca \
+    --cert=ca-cert.pem --key=ca-key.pem --namespace cert-manager
 
 # Adding the Root Certificate to macOS System Keychain
 sudo security add-trusted-cert -d \

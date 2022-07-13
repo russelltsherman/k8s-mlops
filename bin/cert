@@ -14,7 +14,7 @@ fi
 DOMAIN=${1}
 PROJECT_ROOT=$(git rev-parse --show-toplevel)
 SECRET="${DOMAIN//./-}-tls"
-SUBJECT="/C=US/ST=Texas/L=Austin/O=OpsBots LLC/OU=DevOps Department/CN=opsbots.org"
+SUBJECT="/C=US/ST=Texas/L=Austin/O=OpsBots LLC/OU=DevOps Department/CN=opsbots.org/emailAddress=support@opsbots.org"
 
 cd "$PROJECT_ROOT"/.certs || exit
 
@@ -51,9 +51,3 @@ echo "create k8s secret for $SECRET"
 kubectl create secret tls "$SECRET" \
     --cert="$DOMAIN".crt \
     --key="$DOMAIN".key
-
-
-
-
-
-

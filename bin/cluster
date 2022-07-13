@@ -16,8 +16,13 @@ case $action in
 
     minikube addons enable ingress
 
+    # Pause until cluster ready?
+
     # Install metrics server
     make -C "${PROJECT_ROOT}/helm/metrics-server" deploy
+
+    ## Install certificate manager
+    make -C "${PROJECT_ROOT}/helm/cert-manager" deploy
 
     CLUSTER_IP=$(minikube ip)
     export CLUSTER_IP
@@ -26,13 +31,12 @@ case $action in
     "$PROJECT_ROOT"/bin/ca
 
     ## Install simple nginx app
-    "$PROJECT_ROOT"/bin/cert nginx.minikube.local
+    # "$PROJECT_ROOT"/bin/cert nginx.minikube.local
     kubectl apply --filename=./manifests/nginx/deployment.yaml
     echo "$(minikube ip) nginx.minikube.local"  | sudo tee -a /etc/hosts
 
     ## Install Keycloak
     kubectl create ns keycloak
-    "$PROJECT_ROOT"/bin/cert keycloak.minikube.local
     kubectl apply --filename=./manifests/keycloak/deployment.yaml
     echo "$(minikube ip) keycloak.minikube.local"  | sudo tee -a /etc/hosts
 
@@ -40,9 +44,6 @@ case $action in
     # make -C "${PROJECT_ROOT}/helm/kubernetes-dashboard" deploy
     # kubectl apply --filename="${PROJECT_ROOT}/helm/kubernetes-dashboard/ingress.yaml"
     # echo "$CLUSTER_IP kubernetes-dashboard.minikube.local"  | sudo tee -a /etc/hosts
-
-    # ## Install certificate manager
-    # make -C "${PROJECT_ROOT}/helm/cert-manager" deploy
 
     # ## install operator lifecycle manager
     # kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/crds.yaml"
