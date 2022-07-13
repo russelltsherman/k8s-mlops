@@ -9,26 +9,32 @@ case $action in
   create) 
     minikube start \
       --cpus='4' \
+      --driver='hyperkit' \
       --kubernetes-version='stable' \
       --memory='8G' \
       --nodes=2
 
+    minikube addons enable ingress
+
+    # Install metrics server
+    make -C "${PROJECT_ROOT}/helm/metrics-server" deploy
+
     CLUSTER_IP=$(minikube ip)
     export CLUSTER_IP
 
-    # Create TLS Certificate Authority Certificat
-    # Generate a private key for the CA: 
-    openssl genrsa 2048 > ca-key.pem
+    # Create Private Certificate Signing Authority
+    "$PROJECT_ROOT"/bin/ca
 
-    # Generate the X509 certificate for the CA: 
-    openssl req -new -x509 -nodes -days 365000 -key ca-key.pem -out ca-cert.pem \
-        -subj "/C=US/ST=Texas/L=Austin/O=OpsBots LLC. /OU=DevOps Department/CN=opsbots.org"
+    ## Install simple nginx app
+    "$PROJECT_ROOT"/bin/cert nginx.minikube.local
+    kubectl apply --filename=./manifests/nginx/deployment.yaml
+    echo "$(minikube ip) nginx.minikube.local"  | sudo tee -a /etc/hosts
 
-    # Create TLS secret which contains custom certificate and private key
-    kubectl -n kube-system create secret tls mkcert --key ca-key.pem --cert ca-cert.pem
-
-    ## Install metrics server
-    make -C "${PROJECT_ROOT}/helm/metrics-server" deploy
+    ## Install Keycloak
+    kubectl create ns keycloak
+    "$PROJECT_ROOT"/bin/cert keycloak.minikube.local
+    kubectl apply --filename=./manifests/keycloak/deployment.yaml
+    echo "$(minikube ip) keycloak.minikube.local"  | sudo tee -a /etc/hosts
 
     # ## Install Kubernetes Dashboard
     # make -C "${PROJECT_ROOT}/helm/kubernetes-dashboard" deploy
@@ -38,12 +44,6 @@ case $action in
     # ## Install certificate manager
     # make -C "${PROJECT_ROOT}/helm/cert-manager" deploy
 
-    # ## Install Keycloak
-    # kubectl create ns keycloak
-    # kubectl apply --filename="${PROJECT_ROOT}/manifests/keycloak/keycloak.yaml"
-    # kubectl apply --filename="${PROJECT_ROOT}/manifests/keycloak/ingress.yaml"
-    # echo "$CLUSTER_IP keycloak.minikube.local"  | sudo tee -a /etc/hosts
-
     # ## install operator lifecycle manager
     # kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/crds.yaml"
     # kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/olm.yaml"
@@ -52,7 +52,6 @@ case $action in
     # kubectl apply --filename="${PROJECT_ROOT}/manifests/open-data-hub/catalog-source.yaml"
     # kubectl apply --filename="${PROJECT_ROOT}/manifests/open-data-hub/odh-subscription.yaml"
 
-    ## write dns mapping to hosts file
     ;;
   delete|destroy) 
     minikube delete
