@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
+ACTION=${1:-"create"}
 PROJECT_ROOT=$(git rev-parse --show-toplevel)
-export PROJECT_ROOT
 
-action=${1:-"create"}
-
-case $action in
+case $ACTION in
   create) 
     minikube start \
       --cpus='4' \
@@ -18,17 +16,14 @@ case $action in
 
     # Pause until cluster ready?
 
+    # Create Private Certificate Signing Authority
+    "$PROJECT_ROOT"/bin/ca
+
     # Install metrics server
     make -C "${PROJECT_ROOT}/helm/metrics-server" deploy
 
     ## Install certificate manager
     make -C "${PROJECT_ROOT}/helm/cert-manager" deploy
-
-    CLUSTER_IP=$(minikube ip)
-    export CLUSTER_IP
-
-    # Create Private Certificate Signing Authority
-    "$PROJECT_ROOT"/bin/ca
 
     ## Install simple nginx app
     # "$PROJECT_ROOT"/bin/cert nginx.minikube.local
@@ -62,17 +57,3 @@ case $action in
     exit 0
     ;;
 esac
-
-# kubectl apply -n [namespace]-f <(echo '
-# apiVersion: cert-manager.io/v1alpha2
-# kind: Certificate
-# metadata:
-#   name: [certificate-name]
-# spec:
-#   secretName: [secret-name]
-#   dnsNames:
-#   - "*.[namespace].svc.cluster.local"
-#   - "*.[namespace]"
-#   issuerRef:
-#     name: [issuer-name]
-# ')
