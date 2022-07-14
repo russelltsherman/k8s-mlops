@@ -5,7 +5,7 @@ export K8S_CTX ?= $(shell kubectl config current-context)
 bootstrap: deps search values
 _PHONY: bootstrap
 
-deploy: preinstall install postinstall
+deploy: deps preinstall install postinstall
 _PHONY: deploy
 
 deployall:
