@@ -35,10 +35,10 @@ case $ACTION in
     kubectl apply --filename=./manifests/keycloak/deployment.yaml
     echo "$(minikube ip) keycloak.minikube.local"  | sudo tee -a /etc/hosts
 
-    # ## Install Kubernetes Dashboard
-    # make -C "${PROJECT_ROOT}/helm/kubernetes-dashboard" deploy
-    # kubectl apply --filename="${PROJECT_ROOT}/helm/kubernetes-dashboard/ingress.yaml"
-    # echo "$CLUSTER_IP kubernetes-dashboard.minikube.local"  | sudo tee -a /etc/hosts
+    ## Install Kubernetes Dashboard
+    make -C "${PROJECT_ROOT}/helm/kubernetes-dashboard" deploy
+    kubectl apply --filename="${PROJECT_ROOT}/helm/kubernetes-dashboard/ingress.yaml"
+    echo "$CLUSTER_IP kubernetes-dashboard.minikube.local"  | sudo tee -a /etc/hosts
 
     # ## install operator lifecycle manager
     # kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/crds.yaml"
