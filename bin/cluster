@@ -40,13 +40,13 @@ case $ACTION in
     kubectl apply --filename="${PROJECT_ROOT}/helm/kubernetes-dashboard/ingress.yaml"
     echo "$CLUSTER_IP kubernetes-dashboard.minikube.local"  | sudo tee -a /etc/hosts
 
-    # ## install operator lifecycle manager
-    # kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/crds.yaml"
-    # kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/olm.yaml"
+    ## install operator lifecycle manager
+    kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/crds.yaml"
+    kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/olm.yaml"
 
-    # ## Register RedHat Community Operators Source repo
-    # kubectl apply --filename="${PROJECT_ROOT}/manifests/open-data-hub/catalog-source.yaml"
-    # kubectl apply --filename="${PROJECT_ROOT}/manifests/open-data-hub/odh-subscription.yaml"
+    ## Register RedHat Community Operators Source repo
+    kubectl apply --filename="${PROJECT_ROOT}/manifests/open-data-hub/catalog-source.yaml"
+    kubectl apply --filename="${PROJECT_ROOT}/manifests/open-data-hub/odh-subscription.yaml"
 
     ;;
   delete|destroy) 
