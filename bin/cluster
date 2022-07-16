@@ -25,7 +25,7 @@ case $ACTION in
     # Pause until cluster ready?
 
     # Create Private Certificate Signing Authority
-    "$PROJECT_ROOT"/bin/ca
+    "$HOME"/bin/ca
 
     # Install metrics server
     make -C "${PROJECT_ROOT}/helm/metrics-server" deploy
