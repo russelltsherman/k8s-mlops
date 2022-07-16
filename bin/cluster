@@ -6,11 +6,15 @@ PROJECT_ROOT=$(git rev-parse --show-toplevel)
 case $ACTION in
   create) 
     minikube start \
-      --cpus='4' \
+      --cpus='8' \
+      --disk-size='100g' \
       --driver='hyperkit' \
       --kubernetes-version='stable' \
-      --memory='8G' \
-      --nodes=2
+      --memory='16g' \
+      --nodes=1
+
+    # running multiple nodes can have issues with pv permissions
+    # https://github.com/kubernetes/minikube/issues/12360
 
     minikube addons enable ingress
 
@@ -45,8 +49,12 @@ case $ACTION in
     kubectl apply --filename="${PROJECT_ROOT}/manifests/operator-lifecycle-manager/v0.20.0/olm.yaml"
 
     ## Register RedHat Community Operators Source repo
-    kubectl apply --filename="${PROJECT_ROOT}/manifests/open-data-hub/catalog-source.yaml"
-    kubectl apply --filename="${PROJECT_ROOT}/manifests/open-data-hub/odh-subscription.yaml"
+    kubectl apply --filename=manifests/open-data-hub/catalog-source.yaml
+    kubectl apply --filename=manifests/open-data-hub/odh-subscription.yaml
+
+    ## create ml-workshop
+    kubectl create ns ml-workshop
+    kubectl apply --filename=manifests/ml-platform/ml-platform.yaml --namespace ml-workshop
 
     ;;
   delete|destroy) 
@@ -57,3 +65,5 @@ case $ACTION in
     exit 0
     ;;
 esac
+
+
