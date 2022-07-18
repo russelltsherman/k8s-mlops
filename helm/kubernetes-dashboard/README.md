@@ -1,6 +1,7 @@
-# README
+# Kubernetes Dashboard
 
-## references
+Kubernetes Dashboard is a general purpose, web-based UI for Kubernetes clusters.
 
-```txt
-```
+## References
+
+[Kubernetes Dashboard](https://github.com/kubernetes/dashboard)

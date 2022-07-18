@@ -5,26 +5,25 @@ PROJECT_ROOT=$(git rev-parse --show-toplevel)
 # set max cores to count of available cores
 MAX_CORES=$(sysctl -n hw.ncpu)
 # set max ram to 75% of available memory
-MAX_RAM=$(expr $(sysctl -n hw.memsize) / $((1024**3)) / 4 \* 3)
+MAX_RAM=$(( $(sysctl -n hw.memsize) / $((1024**3)) / 4 * 3 ))
 PROFILE=k8s-mlops
 
 case $ACTION in
   create) 
+
     minikube start \
       --cpus="$MAX_CORES" \
       --disk-size='100g' \
       --driver='hyperkit' \
       --kubernetes-version='stable' \
-      --memory="$MAX_RAM" \
+      --memory="${MAX_RAM}g" \
       --nodes=1 \
       --profile="$PROFILE"
 
     # running multiple nodes can have issues with pv permissions
     # https://github.com/kubernetes/minikube/issues/12360
 
-    minikube addons enable ingress
-
-    # Pause until cluster ready?
+    minikube addons enable ingress --profile="$PROFILE"
 
     # Create Private Certificate Signing Authority
     "$HOME"/bin/ca
@@ -63,21 +62,37 @@ case $ACTION in
     # kubectl apply --filename=manifests/ml-platform/ml-platform.yaml --namespace ml-workshop
 
     ;;
+
   dashboard)
+
     TOKENNAME=$(kubectl -n kube-system get serviceaccount/dashboard-admin -o jsonpath='{.secrets[0].name}')
     TOKEN=$(kubectl -n kube-system get secret "$TOKENNAME" -o jsonpath='{.data.token}' | base64 --decode)
-    IP=$(minikube ip --profile="$PROFILE")
 
     echo "$TOKEN"
 
     open https://kubernetes-dashboard.minikube.local/
 
     ;;
+
   delete|destroy) 
+
     minikube delete --profile="$PROFILE"
     ;;
+
+  ip)
+
+    minikube ip --profile="$PROFILE"
+    ;;
+
+  ssh)
+
+    minikube ssh --profile="$PROFILE"
+    ;;
+  
   *)
+
     echo "unrecognied action"
     exit 0
     ;;
+
 esac

@@ -1,0 +1,14 @@
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: opsbots
+  enabled: true
+  hosts:
+    - jupyterhub.minikube.local
+  tls:
+    - hosts:
+        - jupyterhub.minikube.local
+      secretName: jupyterhub-minikube-local-tls
+
+proxy:
+  service:
+    type: NodePort

@@ -16,7 +16,6 @@ _PHONY: deployall
 
 delete: 
 	helm delete $(CHART) --namespace $(NAMESPACE)
-
 _PHONY: delete
 
 deps:
