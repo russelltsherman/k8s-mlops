@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    checksum/configmap: 477b9ea763dc6dfa714452f6a707a13d3b4a48d9c512e594d44a5233db098999
+    checksum/health: 9463811d25909dca6b3c85715619dc375de313711438368cd8a7967fd8248221
+    checksum/scripts: 0b4fee4f0d3a3a781a82225288a8e70e92a1a08d2e396d21e84188a6b1906cc0
+    checksum/secret: accf045d76eda92532bfdcc8e5ceaf21dda9888d6ba641c0d8bfb79cb11ebb6a
+    kubernetes.io/limit-ranger:
+      "LimitRanger plugin set: cpu, memory request for container
+      redis; cpu, memory limit for container redis"
+  creationTimestamp: "2022-07-17T20:56:16Z"
+  generateName: app-aflow-redis-master-
+  labels:
+    app.kubernetes.io/component: master
+    app.kubernetes.io/instance: app-aflow
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    component.opendatahub.io/name: airflow2
+    controller-revision-hash: app-aflow-redis-master-5b84dc68f6
+    helm.sh/chart: redis-14.8.11
+    opendatahub.io/component: "false"
+    statefulset.kubernetes.io/pod-name: app-aflow-redis-master-0
+  name: app-aflow-redis-master-0
+  namespace: ml-workshop
+  ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: app-aflow-redis-master
+      uid: 139f2dab-974a-4e7d-ab5d-b2357e454968
+  resourceVersion: "11266"
+  uid: 7eae448d-64c4-4058-9276-036942852425
+spec:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: master
+                app.kubernetes.io/instance: app-aflow
+                app.kubernetes.io/name: redis
+                component.opendatahub.io/name: airflow2
+                opendatahub.io/component: "false"
+            namespaces:
+              - ml-workshop
+            topologyKey: kubernetes.io/hostname
+          weight: 1
+  containers:
+    - env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: redis-password
+              name: app-aflow-redis
+      image: quay.io/ml-on-k8s/redis-6:1-25
+      imagePullPolicy: Always
+      livenessProbe:
+        failureThreshold: 5
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 6379
+        timeoutSeconds: 6
+      name: redis
+      ports:
+        - containerPort: 6379
+          name: redis
+          protocol: TCP
+      readinessProbe:
+        failureThreshold: 5
+        initialDelaySeconds: 20
+        periodSeconds: 5
+        successThreshold: 1
+        tcpSocket:
+          port: 6379
+        timeoutSeconds: 2
+      resources:
+        limits:
+          cpu: "1"
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 500Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+        - mountPath: /var/lib/redis/data
+          name: redis-data
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-jdttv
+          readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  hostname: app-aflow-redis-master-0
+  nodeName: k8s-mlops
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: app-aflow-redis
+  serviceAccountName: app-aflow-redis
+  subdomain: app-aflow-redis-headless
+  terminationGracePeriodSeconds: 30
+  tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+  volumes:
+    - name: redis-data
+      persistentVolumeClaim:
+        claimName: redis-data-app-aflow-redis-master-0
+    - name: kube-api-access-jdttv
+      projected:
+        defaultMode: 420
+        sources:
+          - serviceAccountToken:
+              expirationSeconds: 3607
+              path: token
+          - configMap:
+              items:
+                - key: ca.crt
+                  path: ca.crt
+              name: kube-root-ca.crt
+          - downwardAPI:
+              items:
+                - fieldRef:
+                    apiVersion: v1
+                    fieldPath: metadata.namespace
+                  path: namespace

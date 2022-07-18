@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubernetes.io/limit-ranger:
+      "LimitRanger plugin set: cpu, memory limit for container
+      mlflow-db-postgresql"
+  creationTimestamp: "2022-07-17T20:05:15Z"
+  generateName: mlflow-db-
+  labels:
+    app: mlflow-db
+    component.opendatahub.io/name: mlflow
+    controller-revision-hash: mlflow-db-5d6cb4dc75
+    opendatahub.io/component: "false"
+    statefulset.kubernetes.io/pod-name: mlflow-db-0
+  name: mlflow-db-0
+  namespace: ml-workshop
+  ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: mlflow-db
+      uid: 94b462bd-ba25-414a-a94c-def63b59b492
+  resourceVersion: "10413"
+  uid: 2140c843-b64e-4f35-bd18-e232d9974530
+spec:
+  containers:
+    - env:
+        - name: POSTGRESQL_ADMIN_PASSWORD
+          value: admin
+        - name: POSTGRESQL_USER
+          value: postgres
+        - name: POSTGRESQL_PASSWORD
+          value: postgres
+        - name: POSTGRESQL_DATABASE
+          value: postgres
+      image: quay.io/internaldatahub/postgresql-96-centos7:9.6
+      imagePullPolicy: Always
+      livenessProbe:
+        failureThreshold: 6
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 5432
+        timeoutSeconds: 5
+      name: mlflow-db-postgresql
+      ports:
+        - containerPort: 5432
+          name: postgresql
+          protocol: TCP
+      readinessProbe:
+        failureThreshold: 6
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 5432
+        timeoutSeconds: 5
+      resources:
+        limits:
+          cpu: "1"
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+        - mountPath: /var/lib/pgsql/data
+          name: mlflow-db-data
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-qjds4
+          readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  hostname: mlflow-db-0
+  nodeName: k8s-mlops
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    fsGroup: 1000630000
+  serviceAccount: default
+  serviceAccountName: default
+  subdomain: mlflow-db
+  terminationGracePeriodSeconds: 30
+  tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+  volumes:
+    - name: mlflow-db-data
+      persistentVolumeClaim:
+        claimName: mlflow-db-data-mlflow-db-0
+    - name: kube-api-access-qjds4
+      projected:
+        defaultMode: 420
+        sources:
+          - serviceAccountToken:
+              expirationSeconds: 3607
+              path: token
+          - configMap:
+              items:
+                - key: ca.crt
+                  path: ca.crt
+              name: kube-root-ca.crt
+          - downwardAPI:
+              items:
+                - fieldRef:
+                    apiVersion: v1
+                    fieldPath: metadata.namespace
+                  path: namespace

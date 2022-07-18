@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kfctl.kubeflow.io/kfdef-instance: opendatahub-ml-workshop.ml-workshop
+  labels:
+    app: jupyterhub
+    component.opendatahub.io/name: jupyterhub
+    opendatahub.io/component: "true"
+  name: jupyterhub
+  namespace: ml-workshop
+  resourceVersion: "4315"
+  uid: da74e698-951c-4e9f-907a-869f4cbce8d5
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: jupyterhub.lo
+      http:
+        paths:
+          - backend:
+              service:
+                name: jupyterhub
+                port:
+                  number: 8080
+            path: /
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - jupyterhub.lo

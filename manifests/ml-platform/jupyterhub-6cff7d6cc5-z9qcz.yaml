@@ -1,0 +1,182 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    alpha.image.policy.openshift.io/resolve-names: "*"
+    kubernetes.io/limit-ranger:
+      "LimitRanger plugin set: cpu request for container
+      jupyterhub; cpu limit for container jupyterhub; cpu request for init container
+      wait-for-database; cpu limit for init container wait-for-database"
+    sidecar.istio.io/inject: "true"
+  creationTimestamp: "2022-07-17T20:33:02Z"
+  generateName: jupyterhub-6cff7d6cc5-
+  labels:
+    app: jupyterhub
+    component: web
+    component.opendatahub.io/name: jupyterhub
+    deploymentconfig: jupyterhub
+    opendatahub.io/component: "true"
+    pod-template-hash: 6cff7d6cc5
+  name: jupyterhub-6cff7d6cc5-z9qcz
+  namespace: ml-workshop
+  ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: jupyterhub-6cff7d6cc5
+      uid: 76ae7f72-2f1a-4295-a351-a1a24c6b4719
+  resourceVersion: "10609"
+  uid: 8042ab9b-b1d7-48c2-98b7-032f4b1dd415
+spec:
+  containers:
+    - env:
+        - name: OAUTH_TLS_VERIFY
+          value: "0"
+        - name: JUPYTERHUB_SERVICE_NAME
+          value: jupyterhub
+        - name: JUPYTERHUB_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRESQL_PASSWORD
+              name: jupyterhub
+        - name: JUPYTERHUB_DATABASE_HOST
+          value: jupyterhub-db
+        - name: PROMETHEUS_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: PROMETHEUS_API_TOKEN
+              name: jupyterhub
+        - name: APP_SCRIPT
+          value: /opt/app-root/builder/run
+        - name: GPU_MODE
+          valueFrom:
+            configMapKeyRef:
+              key: gpu_mode
+              name: jupyterhub-cfg
+        - name: JUPYTERHUB_ADMIN_USERS
+          valueFrom:
+            configMapKeyRef:
+              key: jupyterhub_admins
+              name: jupyterhub-cfg
+        - name: SINGLEUSER_PVC_SIZE
+          valueFrom:
+            configMapKeyRef:
+              key: singleuser_pvc_size
+              name: jupyterhub-cfg
+        - name: JUPYTERHUB_ADMIN_GROUPS
+          valueFrom:
+            configMapKeyRef:
+              key: admin_groups
+              name: jupyterhub-default-groups-config
+        - name: JUPYTERHUB_ALLOWED_GROUPS
+          valueFrom:
+            configMapKeyRef:
+              key: allowed_groups
+              name: jupyterhub-default-groups-config
+        - name: JUPYTERHUB_CRYPT_KEY
+          valueFrom:
+            secretKeyRef:
+              key: JUPYTERHUB_CRYPT_KEY
+              name: jupyterhub
+        - name: JPY_COOKIE_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: JPY_COOKIE_SECRET
+              name: jupyterhub
+        - name: CONFIGPROXY_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: CONFIGPROXY_AUTH_TOKEN
+              name: jupyterhub
+      image: quay.io/odh-jupyterhub/jupyterhub-img:v0.3.0
+      imagePullPolicy: Always
+      name: jupyterhub
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      resources:
+        limits:
+          cpu: "1"
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 1Gi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+        - mountPath: /opt/app-root/configs
+          name: config
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-64bq6
+          readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+    - command:
+        - wait-for-database
+      env:
+        - name: JUPYTERHUB_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRESQL_PASSWORD
+              name: jupyterhub
+        - name: JUPYTERHUB_DATABASE_HOST
+          value: jupyterhub-db
+      image: quay.io/odh-jupyterhub/jupyterhub-img:v0.3.0
+      imagePullPolicy: Always
+      name: wait-for-database
+      resources:
+        limits:
+          cpu: "1"
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 1Gi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-64bq6
+          readOnly: true
+  nodeName: k8s-mlops
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: jupyterhub-hub
+  serviceAccountName: jupyterhub-hub
+  terminationGracePeriodSeconds: 30
+  tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+  volumes:
+    - configMap:
+        defaultMode: 420
+        name: jupyterhub-cfg
+      name: config
+    - name: kube-api-access-64bq6
+      projected:
+        defaultMode: 420
+        sources:
+          - serviceAccountToken:
+              expirationSeconds: 3607
+              path: token
+          - configMap:
+              items:
+                - key: ca.crt
+                  path: ca.crt
+              name: kube-root-ca.crt
+          - downwardAPI:
+              items:
+                - fieldRef:
+                    apiVersion: v1
+                    fieldPath: metadata.namespace
+                  path: namespace

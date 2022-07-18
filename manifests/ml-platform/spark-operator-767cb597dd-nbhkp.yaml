@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubernetes.io/limit-ranger:
+      "LimitRanger plugin set: cpu, memory request for container
+      spark-operator; cpu, memory limit for container spark-operator"
+  creationTimestamp: "2022-07-17T20:05:15Z"
+  generateName: spark-operator-767cb597dd-
+  labels:
+    app.kubernetes.io/name: radanalytics-spark-operator
+    pod-template-hash: 767cb597dd
+  name: spark-operator-767cb597dd-nbhkp
+  namespace: ml-workshop
+  ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: spark-operator-767cb597dd
+      uid: b2bca628-a35a-460b-9d25-4bf435594f99
+  resourceVersion: "12450"
+  uid: ec520f48-69e4-445e-a398-8ce8cc73c166
+spec:
+  containers:
+    - env:
+        - name: WATCH_NAMESPACE
+          value: ml-workshop
+        - name: QUARKUS_KUBERNETES_CLIENT_NAMESPACE
+          value: ml-workshop
+        - name: INGRESS_HOST
+          value: .minikube.local
+      image: quay.io/ml-on-k8s/spark-operator:1.3.3
+      imagePullPolicy: Always
+      name: spark-operator
+      resources:
+        limits:
+          cpu: "1"
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 500Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-57j58
+          readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: k8s-mlops
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: spark-operator
+  serviceAccountName: spark-operator
+  terminationGracePeriodSeconds: 5
+  tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+  volumes:
+    - name: kube-api-access-57j58
+      projected:
+        defaultMode: 420
+        sources:
+          - serviceAccountToken:
+              expirationSeconds: 3607
+              path: token
+          - configMap:
+              items:
+                - key: ca.crt
+                  path: ca.crt
+              name: kube-root-ca.crt
+          - downwardAPI:
+              items:
+                - fieldRef:
+                    apiVersion: v1
+                    fieldPath: metadata.namespace
+                  path: namespace

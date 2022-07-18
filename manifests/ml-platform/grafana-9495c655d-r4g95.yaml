@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubernetes.io/limit-ranger:
+      "LimitRanger plugin set: cpu, memory limit for container
+      grafana"
+  creationTimestamp: "2022-07-17T20:05:15Z"
+  generateName: grafana-9495c655d-
+  labels:
+    app: grafana
+    component.opendatahub.io/name: grafana
+    opendatahub.io/component: "false"
+    pod-template-hash: 9495c655d
+  name: grafana-9495c655d-r4g95
+  namespace: ml-workshop
+  ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: grafana-9495c655d
+      uid: ea6193c4-7621-46b0-8467-c294d5c00645
+  resourceVersion: "9504"
+  uid: 6cdabda1-a908-4b1c-bf7e-b08b817146de
+spec:
+  containers:
+    - env:
+        - name: GF_AUTH_GENERIC_OAUTH_NAME
+          value: KeyCloak
+        - name: GF_AUTH_GENERIC_OAUTH_ENABLED
+          value: "true"
+        - name: GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP
+          value: "true"
+        - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+          value: grafana
+        - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+          value: efbb6591-86d0-4270-a544-f47689460a85
+        - name: GF_AUTH_GENERIC_OAUTH_TLS_SKIP_VERIFY_INSECURE
+          value: "true"
+        - name: GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_NAME
+          value: email
+        - name: GF_AUTH_GENERIC_OAUTH_AUTH_URL
+          value: https://keycloak.minikube.local/auth/realms/master/protocol/openid-connect/auth
+        - name: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
+          value: https://keycloak.minikube.local/auth/realms/master/protocol/openid-connect/token
+        - name: GF_AUTH_GENERIC_OAUTH_API_URL
+          value: https://keycloak.minikube.local/auth/realms/master/protocol/openid-connect/userinfo
+        - name: GF_AUTH_GENERIC_OAUTH_SCOPES
+          value: roles profile email
+        - name: GF_SERVER_ROOT_URL
+          value: https://grafana.minikube.local
+        - name: GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH
+          value:
+            contains(realm_access.roles[*], 'Admin') && 'Admin' || contains(realm_access.roles[*],
+            'editor') && 'editor' || 'Admin'
+      image: grafana/grafana-oss:8.3.3-ubuntu
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 3
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        tcpSocket:
+          port: 3000
+        timeoutSeconds: 1
+      name: grafana
+      ports:
+        - containerPort: 3000
+          name: http-grafana
+          protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /robots.txt
+          port: 3000
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 30
+        successThreshold: 1
+        timeoutSeconds: 2
+      resources:
+        limits:
+          cpu: "1"
+          memory: 1Gi
+        requests:
+          cpu: 250m
+          memory: 750Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-pv
+        - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          name: kube-api-access-pm745
+          readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: k8s-mlops
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    fsGroup: 472
+    supplementalGroups:
+      - 0
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+  volumes:
+    - name: grafana-pv
+      persistentVolumeClaim:
+        claimName: grafana-pvc
+    - name: kube-api-access-pm745
+      projected:
+        defaultMode: 420
+        sources:
+          - serviceAccountToken:
+              expirationSeconds: 3607
+              path: token
+          - configMap:
+              items:
+                - key: ca.crt
+                  path: ca.crt
+              name: kube-root-ca.crt
+          - downwardAPI:
+              items:
+                - fieldRef:
+                    apiVersion: v1
+                    fieldPath: metadata.namespace
+                  path: namespace
