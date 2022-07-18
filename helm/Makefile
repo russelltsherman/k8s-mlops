@@ -16,7 +16,6 @@ _PHONY: deployall
 
 delete: 
 	helm delete $(CHART) --namespace $(NAMESPACE)
-
 _PHONY: delete
 
 deps:
@@ -38,7 +37,6 @@ _PHONY: fetch
 
 install:
 	helm upgrade $(CHART) $(REPO)/$(CHART) \
-		--atomic \
 		--cleanup-on-fail \
 		--create-namespace \
 		--debug \
@@ -73,11 +71,24 @@ _PHONY: postinstall
 postdelete:
 _PHONY: postdelete
 
+pull:
+	helm pull $(REPO)/$(CHART) \
+		--untar \
+		--untardir .chart \
+		--version $(VERSION)
+_PHONY: pull
+
 search:
 	helm search repo $(CHART)
 _PHONY: search 
 
+uninstall:
+	helm uninstall $(CHART) --namespace $(NAMESPACE)
+_PHONY: search
+
 values:
-	helm inspect values $(REPO)/$(CHART) --version $(VERSION) > $(MODULE)/$(CHART)-$(VERSION)-values.yaml
+	helm inspect values $(REPO)/$(CHART) \
+		--version $(VERSION) \
+		> $(MODULE)/$(CHART)-$(VERSION)-values.yaml
 	touch $(MODULE)/overrides.yaml
 _PHONY: values

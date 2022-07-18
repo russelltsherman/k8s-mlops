@@ -13,5 +13,8 @@ Brewfile.lock*
 # ignore helm chart default values
 helm/**/*-values.yaml
 
+# ignore pulled helm charts
+helm/**/.chart
+
 # ignore certs dir
 .certs
